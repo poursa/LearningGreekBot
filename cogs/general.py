@@ -17,7 +17,7 @@ class General(commands.Cog):
         await interaction.response.send_message("Pinging...")
         after = discord.utils.utcnow()
         message_latency = round((after - before).total_seconds() * 1000)
-        await interaction.edit_original_response(content=f"Pong! 🏓\nWebsocket latency: {websocket_latency}ms\nMessage latency: {message_latency}ms")
+        await interaction.edit_original_response(content=f"Pong! \nWebsocket latency: {websocket_latency}ms\nMessage latency: {message_latency}ms")
 
 
 async def setup(bot):

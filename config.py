@@ -10,6 +10,7 @@ SYNC_DELAY_MINUTES = int(os.getenv("SYNC_DELAY_MINUTES", 0))
 SYNC_TIMESTAMP_FILE = "data/last_sync.txt"
 EXTENSIONS = [
     "cogs.general",
-    "cogs.welcome"
+    "cogs.faq",
+    "cogs.beginnercommands",
 ]
 
