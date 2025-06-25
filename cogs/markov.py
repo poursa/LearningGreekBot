@@ -8,7 +8,7 @@ import markovify
 import os
 import re
 from cogs.base import BaseCog
-
+from discord.message import Message
 
 class Markov(BaseCog):
     def __init__(self, bot):
@@ -18,36 +18,37 @@ class Markov(BaseCog):
         self.generating = False
 
     @app_commands.command(name="train_markov", description="Train a Markov model from your messages in this channel.")
-    async def train_markov(self, interaction: discord.Interaction):
+    @app_commands.describe(days_lookback="Number of days to look back for messages to train on (default is 1 day).")
+    async def train_markov(self, interaction: discord.Interaction, days_lookback: int = 1):
         if self.generating:
             await interaction.response.send_message("❌ A training session is already in progress. Please wait until it finishes.")
             return
         self.generating = True
         try:
-            await interaction.response.defer(thinking=True)
-            sleep_time = 0.02
+            await interaction.response.send_message('✅ Starting training, this might take a while...')
+
+            processed = 0
             channel = interaction.channel
             author_id = interaction.user.id
-            cutoff = datetime.now(timezone.utc) - timedelta(days=60)
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
             start_time = datetime.now(timezone.utc)
             collected = []
+            messages:list[Message] = [msg async for msg in channel.history(limit=None, after=cutoff)]
+            total_messages = len(messages)
+
 
             def is_non_latin(text):
-                return not re.search(r'[a-zA-Z]', text)
+                return not re.search(r'[a-zA-Z]', text) and text.strip()
 
+            await interaction.response.send(f"Starting data collection... Total messages: {total_messages}")
+            for msg in messages:
+                if (msg.author.id == author_id or msg.author.id == 311238703295102976 or msg.author.id == 434288236752273419) and is_non_latin(msg.content):
+                    collected.append(msg.content.strip())
+                processed += 1
+                if processed % max(total_messages // 10, 1) == 0:
+                    percent = (processed / total_messages) * 100
+                    print(f"Training progress: {percent:.1f}% ({processed}/{total_messages})")
 
-            for i in range(2):
-                try:
-                    async for msg in channel.history(limit=None, after=cutoff, oldest_first=True):
-                        if (msg.author.id == author_id or msg.author.id == 311238703295102976 or msg.author.id == 434288236752273419) and is_non_latin(msg.content):
-                            collected.append(msg.content.strip())
-                            #print(f"Collected message date {msg.created_at}")
-                        await asyncio.sleep(sleep_time)
-                    break
-                except discord.Forbidden:
-                    collected = []
-                    print("Slowing down due to rate limits, retrying...")
-                    sleep_time = 0.05
 
             if not collected:
                 await interaction.followup.send("No messages found to train on.")
@@ -61,7 +62,8 @@ class Markov(BaseCog):
             end_time = datetime.now(timezone.utc)
             duration = (end_time - start_time).total_seconds()
             durataion_mins = duration / 60
-            await interaction.channel.send(f"Trained on {len(collected)} messages in {durataion_mins if duration > 60 else duration} seconds. Model is ready for use.")
+            print(f"Trained on {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for use.")
+            await interaction.channel.send(f"Trained on {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for use.")
         finally:
             self.generating = False
 

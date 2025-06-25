@@ -8,11 +8,6 @@ class General(BaseCog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot, checks=[])
 
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("General cog ready.")
-
     @app_commands.command(name="ping", description="Check the bot's latency.")
     @decorators.block_user()
     async def ping(self, interaction: discord.Interaction):
