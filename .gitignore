@@ -2,4 +2,4 @@
 .env
 bot-env
 *__pycache__/
-last_sync.txt
+data/

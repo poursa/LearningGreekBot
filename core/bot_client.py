@@ -1,7 +1,10 @@
+import inspect
+import importlib
 import discord
 from discord.ext import commands
 from config import GUILD_ID, EXTENSIONS
-from core.sync_utils import should_sync, update_sync_timestamp
+from core.utils import should_sync, update_sync_timestamp
+from cogs.base import BaseCog
 
 class LearningGreekBot(commands.Bot):
     def __init__(self):
@@ -14,16 +17,21 @@ class LearningGreekBot(commands.Bot):
         super().__init__(command_prefix='!', intents=intents)
 
     async def setup_hook(self):
-        
         for ext in EXTENSIONS:
-            await self.load_extension(ext)
+            try:
+                mod = importlib.import_module(ext)
+            except ModuleNotFoundError as e:
+                print(f"Failed to load extension {ext}: {e}")
+                continue
+            for name, obj in inspect.getmembers(mod):
+                if inspect.isclass(obj) and issubclass(obj, BaseCog) and obj is not BaseCog:
+                    await self.add_cog(obj(self))
+                    print(f"Loaded: {name}")
         print("All extensions loaded.")
 
         if should_sync():
-            guild = discord.Object(id=GUILD_ID)
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
-            print("Slash commands synced.")
+            synced = await self.tree.sync()
+            print(f"{synced.__len__()} slash commands synced.")
             update_sync_timestamp()
         else:
             print("Skipping slash commands sync due to cooldown.")

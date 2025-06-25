@@ -3,13 +3,15 @@ from discord import app_commands
 import discord
 import asyncio
 from config import CHANNEL_NAME
+from core import decorators
+from cogs.base import BaseCog
 
-class BeginnerCommands(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
+class BeginnerCommands(BaseCog):
+    def __init__(self, bot: commands.Bot):
+        super().__init__(bot, checks=[])
 
     @app_commands.command(name="welcomemembers", description="Gather users who got a rank and print a welcome message")
+    @decorators.block_user()
     async def welcomemembers(self, interaction: discord.Interaction):
         EXCLUDED_ROLES = {"Native", "Non-Learner"}
 
@@ -45,6 +47,3 @@ class BeginnerCommands(commands.Cog):
         else:
             print("No matching messages found.")
             await interaction.followup.send("No matching messages found.")
-
-async def setup(bot):
-    await bot.add_cog(BeginnerCommands(bot))
