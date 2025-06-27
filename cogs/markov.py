@@ -1,82 +1,132 @@
 # features/markov.py
+from pathlib import Path
+from datetime import datetime, timedelta, timezone
+import re
 
+import markovify
 import discord
 from discord import app_commands
-import asyncio
-from datetime import datetime, timedelta, timezone
-import markovify
-import os
-import re
-from cogs.base import BaseCog
 from discord.message import Message
+
+from cogs.base import BaseCog
+from core import decorators
+from core.utils import sanitize_sentence
+
+def encode_message(raw_msg: str) -> str:
+    """
+    Encodes a message for Markov processing by sanitizing and escaping special characters.
+    """
+    return sanitize_sentence(raw_msg).replace("\\", "\\\\").replace("\n", " \\n ")
+
+def decode_message(encoded_msg: str) -> str:
+    """
+    Decodes a message encoded for Markov processing by replacing escaped characters with their original form.
+    """
+    return sanitize_sentence(encoded_msg).replace("\\n", "\n").replace("\\\\", "\\")
+
 
 class Markov(BaseCog):
     def __init__(self, bot):
         super().__init__(bot, checks=[])
         self.model = None
-        self.source_file = "data/markov_input.txt"
+        self.source_file = Path("data/markov_input.txt")
         self.generating = False
+        self.state_size = 2
 
-    @app_commands.command(name="train_markov", description="Train a Markov model from your messages in this channel.")
+    def train(self, text: list[str]):
+        """
+        Train the Markov model with the provided text.
+        """
+        if not text:
+            raise ValueError("No text provided for training.")
+        self.model = markovify.NewlineText('\n'.join(text), state_size=self.state_size)
+
+    @app_commands.command(name="gather_markov_data", description="Train a Markov model from your messages in this channel.")
     @app_commands.describe(days_lookback="Number of days to look back for messages to train on (default is 1 day).")
-    async def train_markov(self, interaction: discord.Interaction, days_lookback: int = 1):
+    @app_commands.default_permissions(administrator=True)
+    @decorators.log_action()
+    @decorators.admin_only()
+    async def gather_markov_data(self, interaction: discord.Interaction, days_lookback: int = 1):
         if self.generating:
-            await interaction.response.send_message("❌ A training session is already in progress. Please wait until it finishes.")
+            await interaction.response.send_message("A training session is already in progress. Please wait until it finishes.")
             return
         self.generating = True
         try:
-            await interaction.response.send_message('✅ Starting training, this might take a while...')
+            await interaction.response.send_message('Starting data collection, this might take a while...')
 
             processed = 0
             channel = interaction.channel
-            author_id = interaction.user.id
             cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
             start_time = datetime.now(timezone.utc)
             collected = []
             messages:list[Message] = [msg async for msg in channel.history(limit=None, after=cutoff)]
             total_messages = len(messages)
 
-
-            def is_non_latin(text):
-                return not re.search(r'[a-zA-Z]', text) and text.strip()
-
-            await interaction.response.send(f"Starting data collection... Total messages: {total_messages}")
+            await channel.send(f"Total messages: {total_messages}")
             for msg in messages:
-                if (msg.author.id == author_id or msg.author.id == 311238703295102976 or msg.author.id == 434288236752273419) and is_non_latin(msg.content):
-                    collected.append(msg.content.strip())
+                content = encode_message(msg.content)
+                if content == "":
+                    continue
+                content = f'{msg.author.id}: {content}'
+                collected.append(content)
                 processed += 1
                 if processed % max(total_messages // 10, 1) == 0:
                     percent = (processed / total_messages) * 100
-                    print(f"Training progress: {percent:.1f}% ({processed}/{total_messages})")
-
+                    print(f"Processing messages: {percent:.1f}% ({processed}/{total_messages})")
 
             if not collected:
-                await interaction.followup.send("No messages found to train on.")
+                await channel.send("No messages found to train on.")
                 return
 
-            os.makedirs("data", exist_ok=True)
-            with open(self.source_file, "w", encoding="utf-8") as f:
+            self.source_file.parent.mkdir(parents=True, exist_ok=True)
+            with self.source_file.open("w", encoding="utf-8") as f:
                 f.write("\n".join(collected))
-
-            self.model = markovify.NewlineText("\n".join(collected), state_size=2)
+            
             end_time = datetime.now(timezone.utc)
             duration = (end_time - start_time).total_seconds()
             durataion_mins = duration / 60
-            print(f"Trained on {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for use.")
-            await interaction.channel.send(f"Trained on {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for use.")
+            print(f"Collected {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for training.")
+            await channel.send(f"Collected {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for training.")
         finally:
             self.generating = False
 
-    @app_commands.command(name="generate_message", description="Generate a sentence using the trained Markov model.")
-    async def generate_message(self, interaction: discord.Interaction):
-        if not self.model and os.path.exists(self.source_file):
-            with open(self.source_file, encoding="utf-8") as f:
-                text = f.read()
-            self.model = markovify.NewlineText(text, state_size=2)
-
-        if not self.model:
-            await interaction.response.send_message("❌ No model found. Run /train_markov first.")
+    @app_commands.command(name="train_markov_model", description="Generate a sentence using the trained Markov model.")
+    @app_commands.describe(user="User to train the model on (default is all users).", greek_only="Whether to only include Greek messages (default is True).")
+    @decorators.log_action()
+    async def train_markov_model(self, interaction: discord.Interaction, user: discord.User | None  = None, greek_only: bool = True):
+        await interaction.response.defer(thinking=True)
+        if not self.source_file.exists():
+            await interaction.followup.send("No source file found. Please run /gather_markov_data first.")
             return
+        
+        with self.source_file.open(encoding="utf-8") as f:
+            messages = []
+            for line in f.readlines():
+                match = re.match(r'^(?P<user_id>\d+):\s*"(?P<content>.*)"$', line)
+                if not match:
+                    continue
+                msg_user = match.group("user_id")
+                msg_content = match.group("content")
+                if user and str(user.id) != msg_user:
+                    continue
+                if greek_only and re.search(r'[a-mo-zA-Z]|^n|[^\\]n', msg_content):
+                    continue
+                messages.append(msg_content)
+        if not messages:
+            await interaction.followup.send("No valid messages found to train the model.")
+            return
+        self.model = markovify.NewlineText('\n'.join(messages), state_size=self.state_size)
 
-        sentence = self.model.make_short_sentence(400, 20, tries = 40)
-        await interaction.response.send_message(sentence or "🤖 Failed to generate a sentence.")
+        await interaction.followup.send("Markov model trained successfully." if self.model else "No model found.")
+
+
+    @app_commands.command(name="generate_message", description="Generate a sentence using the trained Markov model.")
+    @decorators.log_action()
+    async def generate_message(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        if not self.model:
+            await interaction.followup.send(f"No model found. Run /{self.train_markov_model.name} first.")
+            return
+        sentence = self.model.make_short_sentence(140, tries=100)
+        sentence = decode_message(sentence) if sentence else None
+        await interaction.followup.send(sentence or "Failed to generate a sentence.")

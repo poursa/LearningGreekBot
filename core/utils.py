@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import time
 from discord import app_commands
 from config import SYNC_DELAY_MINUTES, SYNC_TIMESTAMP_FILE
-
+import re
 
 def should_sync():
     try:
@@ -23,3 +23,9 @@ def getcommand(self, attr: str) -> app_commands.Command | None:
     if isinstance(maybe_cmd, app_commands.Command):
         return maybe_cmd
     return None
+
+def sanitize_sentence(sentence):
+    ### Remove mentions and links
+    sentence = re.sub(r'<@!?[0-9]+>', '', sentence)
+    sentence = re.sub(r'https?://\S+', '', sentence)
+    return sentence

@@ -12,7 +12,7 @@ class FrequentlyAskedQuestions(BaseCog):
 
     @app_commands.command(name="faq", description="Get answers to frequently asked questions")
     @app_commands.describe(topic="The FAQ you want to learn about")
-    @decorators.block_user()
+    @decorators.log_action()
     async def faq(self, interaction: discord.Interaction, topic: str):
         response_text = faq_answers.get(topic.lower().strip(), "Sorry, I don't have information about that topic.\n Available topics: \n" + "\n    ".join(faq_answers.keys()))
         await interaction.response.send_message(response_text)

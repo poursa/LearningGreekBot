@@ -11,7 +11,7 @@ class BeginnerCommands(BaseCog):
         super().__init__(bot, checks=[])
 
     @app_commands.command(name="welcomemembers", description="Gather users who got a rank and print a welcome message")
-    @decorators.block_user()
+    @decorators.log_action()
     async def welcomemembers(self, interaction: discord.Interaction):
         EXCLUDED_ROLES = {"Native", "Non-Learner"}
 

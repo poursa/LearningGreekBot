@@ -9,7 +9,7 @@ class General(BaseCog):
         super().__init__(bot, checks=[])
 
     @app_commands.command(name="ping", description="Check the bot's latency.")
-    @decorators.block_user()
+    @decorators.log_action()
     async def ping(self, interaction: discord.Interaction):
         websocket_latency = round(self.bot.latency * 1000)
         before = discord.utils.utcnow()
