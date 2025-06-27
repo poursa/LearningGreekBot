@@ -54,10 +54,8 @@ class Markov(BaseCog):
         self.generating = True
         try:
             await interaction.response.send_message('Starting data collection, this might take a while...')
-
             channel = interaction.channel
             cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
-            start_time = datetime.now(timezone.utc)
             collected = []
 
             current_datetime = datetime.now(timezone.utc)
@@ -72,7 +70,7 @@ class Markov(BaseCog):
             await channel.send(f"Total messages: {len(messages)}")
             for msg in messages:
                 content = encode_message(msg.content)
-                if content == "":
+                if content.strip() == "":
                     continue
                 content = f'{msg.author.id}: {content}'
                 collected.append(content)
