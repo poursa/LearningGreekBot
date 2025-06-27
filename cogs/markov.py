@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime, timedelta, timezone
 import re
 
+from tqdm.asyncio import  tqdm
 import markovify
 import discord
 from discord import app_commands
@@ -54,39 +55,37 @@ class Markov(BaseCog):
         try:
             await interaction.response.send_message('Starting data collection, this might take a while...')
 
-            processed = 0
             channel = interaction.channel
             cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
             start_time = datetime.now(timezone.utc)
             collected = []
-            messages:list[Message] = [msg async for msg in channel.history(limit=None, after=cutoff)]
-            total_messages = len(messages)
 
-            await channel.send(f"Total messages: {total_messages}")
+            current_datetime = datetime.now(timezone.utc)
+            messages= []
+            with tqdm(desc="Collecting messages", unit="hours of messages", total=days_lookback * 24) as pbar:
+                async for msg in channel.history(limit=None, after=cutoff):
+                    messages.append(msg)
+                    hours_processed = days_lookback * 24 - (current_datetime - msg.created_at).total_seconds() // 3600
+                    pbar.n = hours_processed
+                    pbar.refresh()
+
+            await channel.send(f"Total messages: {len(messages)}")
             for msg in messages:
                 content = encode_message(msg.content)
                 if content == "":
                     continue
                 content = f'{msg.author.id}: {content}'
                 collected.append(content)
-                processed += 1
-                if processed % max(total_messages // 10, 1) == 0:
-                    percent = (processed / total_messages) * 100
-                    print(f"Processing messages: {percent:.1f}% ({processed}/{total_messages})")
 
             if not collected:
                 await channel.send("No messages found to train on.")
                 return
 
             self.source_file.parent.mkdir(parents=True, exist_ok=True)
-            with self.source_file.open("w", encoding="utf-8") as f:
-                f.write("\n".join(collected))
+            self.source_file.write_text("\n".join(collected))
             
-            end_time = datetime.now(timezone.utc)
-            duration = (end_time - start_time).total_seconds()
-            durataion_mins = duration / 60
-            print(f"Collected {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for training.")
-            await channel.send(f"Collected {len(collected)} messages in {durataion_mins if duration > 60 else duration:.2f} seconds. Model is ready for training.")
+            print(f"Collected {len(collected)} messages. Model is ready for training.")
+            await channel.send(f"Collected {len(collected)} messages. Model is ready for training.")
         finally:
             self.generating = False
 
