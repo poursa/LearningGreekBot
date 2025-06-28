@@ -1,16 +1,16 @@
 # features/markov.py
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
 import re
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
-from tqdm.asyncio import tqdm
-import markovify
 import discord
+import markovify
 from discord import app_commands
+from tqdm.asyncio import tqdm
 
-from .base import BaseCog
 from ..core import decorators
 from ..core.utils import sanitize_sentence
+from .base import BaseCog
 
 
 def encode_message(raw_msg: str) -> str:
@@ -77,7 +77,7 @@ class Markov(BaseCog):
             if channel is None:
                 print("[ERROR] No channel found for data collection.")
                 return
-            cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
+            cutoff = datetime.now(UTC) - timedelta(days=days_lookback)
             collected = []
 
             messages = []

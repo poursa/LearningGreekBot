@@ -1,12 +1,12 @@
-import inspect
 import importlib
-import discord
+import inspect
 
+import discord
 from discord.ext import commands
 
+from ..cogs.base import BaseCog
 from ..config import EXTENSIONS
 from .utils import should_sync, update_sync_timestamp
-from ..cogs.base import BaseCog
 
 
 class LearningGreekBot(commands.Bot):

@@ -1,5 +1,5 @@
-from .core.bot_client import LearningGreekBot
 from .config import TOKEN
+from .core.bot_client import LearningGreekBot
 
 
 def main() -> None:

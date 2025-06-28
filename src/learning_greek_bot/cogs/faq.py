@@ -1,10 +1,10 @@
 import discord
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 
-from .base import BaseCog
 from ..core import decorators
 from ..data.faq_answers import faq_answers
+from .base import BaseCog
 
 
 class FrequentlyAskedQuestions(BaseCog):
