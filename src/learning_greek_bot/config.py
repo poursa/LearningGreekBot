@@ -11,9 +11,9 @@ SYNC_DELAY_MINUTES = int(os.getenv("SYNC_DELAY_MINUTES", 1))
 SYNC_TIMESTAMP_FILE = Path("data/last_sync.txt")
 OWNER_ID = os.getenv("DISCORD_OWNER_ID")
 EXTENSIONS = [
-    "cogs.general",
-    "cogs.faq",
-    "cogs.beginnercommands",
-    "cogs.admindev",
-    "cogs.markov",
+    "learning_greek_bot.cogs.general",
+    "learning_greek_bot.cogs.faq",
+    "learning_greek_bot.cogs.beginnercommands",
+    "learning_greek_bot.cogs.admindev",
+    "learning_greek_bot.cogs.markov",
 ]

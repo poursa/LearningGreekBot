@@ -11,7 +11,23 @@ requires-python = ">=3.12"
 dynamic = ["dependencies"]
 
 [project.scripts]
-run-bot = "bot:main"
+run-bot = "learning_greek_bot.bot:main"
 
 [tool.hatch.metadata.hooks.requirements_txt]
 files = ["requirements.txt"]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
