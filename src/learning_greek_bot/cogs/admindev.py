@@ -4,7 +4,6 @@ from discord.ext import commands
 
 from ..core import decorators
 from ..core.check_utils import is_owner_user
-from ..core.utils import getcommand
 from .base import BaseCog
 
 
@@ -13,7 +12,7 @@ class AdminDev(BaseCog):
         checks = [is_owner_user]
         super().__init__(bot, checks=checks)
         for attr in dir(self):
-            cmnd = getcommand(self, attr)
+            cmnd = self.getcommand(attr)
             if cmnd:
                 cmnd.default_permissions = Permissions(administrator=True)
 
