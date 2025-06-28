@@ -22,13 +22,8 @@ def admin_only():
     def decorator(func):
         @wraps(func)
         async def wrapper(self, interaction: Interaction, *args, **kwargs):
-            if (
-                not interaction.user
-                or not interaction.user.guild_permissions.administrator
-            ):
-                await interaction.response.send_message(
-                    "You do not have permission to use this command."
-                )
+            if not interaction.user or not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message("You do not have permission to use this command.")
                 return
             return await func(self, interaction, *args, **kwargs)
 

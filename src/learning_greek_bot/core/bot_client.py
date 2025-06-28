@@ -27,11 +27,7 @@ class LearningGreekBot(commands.Bot):
                 print(f"Failed to load extension {ext}: {e}")
                 continue
             for name, obj in inspect.getmembers(mod):
-                if (
-                    inspect.isclass(obj)
-                    and issubclass(obj, BaseCog)
-                    and obj is not BaseCog
-                ):
+                if inspect.isclass(obj) and issubclass(obj, BaseCog) and obj is not BaseCog:
                     await self.add_cog(obj(self))
                     print(f"Loaded: {name}")
         print("All extensions loaded.")

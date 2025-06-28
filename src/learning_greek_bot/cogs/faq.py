@@ -11,9 +11,7 @@ class FrequentlyAskedQuestions(BaseCog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot, checks=[])
 
-    @app_commands.command(
-        name="faq", description="Get answers to frequently asked questions"
-    )
+    @app_commands.command(name="faq", description="Get answers to frequently asked questions")
     @app_commands.describe(topic="The FAQ you want to learn about")
     @decorators.log_action()
     async def faq(self, interaction: discord.Interaction, topic: str):

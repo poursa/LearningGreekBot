@@ -25,9 +25,7 @@ class BeginnerCommands(BaseCog):
 
         guild = interaction.guild
         if not guild:
-            await interaction.followup.send(
-                "This command can only be used in a server."
-            )
+            await interaction.followup.send("This command can only be used in a server.")
             return
         channel = discord.utils.get(guild.text_channels, name=CHANNEL_NAME)
 
@@ -45,9 +43,7 @@ class BeginnerCommands(BaseCog):
                     except discord.NotFound:
                         continue
 
-                    has_excluded = any(
-                        role.name in EXCLUDED_ROLES for role in member.roles
-                    )
+                    has_excluded = any(role.name in EXCLUDED_ROLES for role in member.roles)
                     if not has_excluded:
                         found_users.add(member.mention)
 
@@ -55,8 +51,7 @@ class BeginnerCommands(BaseCog):
 
         if found_users:
             welcome_line = (
-                " ".join(sorted(found_users))
-                + "# Welcome everyone! What made you interested in modern Greek?"
+                " ".join(sorted(found_users)) + "# Welcome everyone! What made you interested in modern Greek?"
             )
             print(welcome_line)
             await interaction.followup.send("Output printed to terminal.")

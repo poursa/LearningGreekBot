@@ -54,15 +54,11 @@ class Markov(BaseCog):
         name="gather_markov_data",
         description="Train a Markov model from your messages in this channel.",
     )
-    @app_commands.describe(
-        days_lookback="Number of days to look back for messages to train on (default is 1 day)."
-    )
+    @app_commands.describe(days_lookback="Number of days to look back for messages to train on (default is 1 day).")
     @app_commands.default_permissions(administrator=True)
     @decorators.log_action()
     @decorators.admin_only()
-    async def gather_markov_data(
-        self, interaction: discord.Interaction, days_lookback: int = 1
-    ):
+    async def gather_markov_data(self, interaction: discord.Interaction, days_lookback: int = 1):
         if self.generating:
             await interaction.response.send_message(
                 "A training session is already in progress. Please wait until it finishes."
@@ -70,9 +66,7 @@ class Markov(BaseCog):
             return
         self.generating = True
         try:
-            await interaction.response.send_message(
-                "Starting data collection, this might take a while..."
-            )
+            await interaction.response.send_message("Starting data collection, this might take a while...")
             channel = interaction.channel
             if channel is None:
                 print("[ERROR] No channel found for data collection.")
@@ -110,9 +104,7 @@ class Markov(BaseCog):
             self.source_file.write_text("\n".join(collected), encoding="utf-8")
 
             print(f"Collected {len(collected)} messages. Model is ready for training.")
-            await channel.send(
-                f"Collected {len(collected)} messages. Model is ready for training."
-            )
+            await channel.send(f"Collected {len(collected)} messages. Model is ready for training.")
         finally:
             self.generating = False
 
@@ -133,9 +125,7 @@ class Markov(BaseCog):
     ):
         await interaction.response.defer(thinking=True)
         if not self.source_file.exists():
-            await interaction.followup.send(
-                "No source file found. Please run /gather_markov_data first."
-            )
+            await interaction.followup.send("No source file found. Please run /gather_markov_data first.")
             return
         with self.source_file.open(encoding="utf-8") as f:
             messages = []
@@ -151,20 +141,14 @@ class Markov(BaseCog):
                     continue
                 messages.append(msg_content)
         if not messages:
-            await interaction.followup.send(
-                "No valid messages found to train the model."
-            )
+            await interaction.followup.send("No valid messages found to train the model.")
             return
         if user:
             self.current_user = user
-        self.model = markovify.NewlineText(
-            "\n".join(messages), state_size=self.state_size
-        )
+        self.model = markovify.NewlineText("\n".join(messages), state_size=self.state_size)
 
         await interaction.followup.send(
-            f"Markov model trained successfully on {len(messages)} messages."
-            if self.model
-            else "No model found."
+            f"Markov model trained successfully on {len(messages)} messages." if self.model else "No model found."
         )
 
     @app_commands.command(
@@ -175,20 +159,14 @@ class Markov(BaseCog):
     async def generate_message(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)
         if not self.model:
-            await interaction.followup.send(
-                f"No model found. Run /{self.train_markov_model.name} first."
-            )
+            await interaction.followup.send(f"No model found. Run /{self.train_markov_model.name} first.")
             return
         if not interaction.guild:
-            await interaction.followup.send(
-                "This command can only be used in a server."
-            )
+            await interaction.followup.send("This command can only be used in a server.")
             return
         sentence = self.model.make_short_sentence(140, tries=100)
         member: discord.Member | None = (
-            interaction.guild.get_member(self.current_user.id)
-            if self.current_user
-            else None
+            interaction.guild.get_member(self.current_user.id) if self.current_user else None
         )
         user_prefix = f"{member.display_name}: " if member else ""
         sentence = f"{user_prefix}{sentence}" if sentence else None
