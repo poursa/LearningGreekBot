@@ -2,3 +2,4 @@ discord.py>=2.5.0
 python-dotenv
 markovify
 tqdm
+types-tqdm

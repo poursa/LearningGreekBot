@@ -10,7 +10,7 @@ from .utils import should_sync, update_sync_timestamp
 
 
 class LearningGreekBot(commands.Bot):
-    def __init__(self):
+    def __init__(self) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         intents.guilds = True
@@ -19,7 +19,7 @@ class LearningGreekBot(commands.Bot):
 
         super().__init__(command_prefix="!", intents=intents)
 
-    async def setup_hook(self):
+    async def setup_hook(self) -> None:
         for ext in EXTENSIONS:
             try:
                 mod = importlib.import_module(ext)

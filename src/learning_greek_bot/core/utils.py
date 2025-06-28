@@ -16,7 +16,7 @@ def should_sync():
         return True
 
 
-def update_sync_timestamp():
+def update_sync_timestamp() -> None:
     SYNC_TIMESTAMP_FILE.write_text(str(time.time()), encoding="utf-8")
 
 
