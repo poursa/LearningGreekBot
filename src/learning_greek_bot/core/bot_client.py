@@ -31,7 +31,7 @@ class LearningGreekBot(commands.Bot):
                     await self.add_cog(obj(self))
                     print(f"Loaded: {name}")
         print("All extensions loaded.")
-        
+
         if should_sync():
             synced = await self.tree.sync()
             print(f"{synced.__len__()} slash commands synced.")
