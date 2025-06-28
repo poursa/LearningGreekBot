@@ -1,8 +1,8 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-from core import decorators
-from cogs.base import BaseCog
+from ..core import decorators
+from .base import BaseCog
 
 
 class General(BaseCog):

@@ -8,9 +8,9 @@ import markovify
 import discord
 from discord import app_commands
 
-from cogs.base import BaseCog
-from core import decorators
-from core.utils import sanitize_sentence
+from .base import BaseCog
+from ..core import decorators
+from ..core.utils import sanitize_sentence
 
 
 def encode_message(raw_msg: str) -> str:
@@ -74,6 +74,9 @@ class Markov(BaseCog):
                 "Starting data collection, this might take a while..."
             )
             channel = interaction.channel
+            if channel is None:
+                print("[ERROR] No channel found for data collection.")
+                return
             cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
             collected = []
 
@@ -176,8 +179,13 @@ class Markov(BaseCog):
                 f"No model found. Run /{self.train_markov_model.name} first."
             )
             return
+        if not interaction.guild:
+            await interaction.followup.send(
+                "This command can only be used in a server."
+            )
+            return
         sentence = self.model.make_short_sentence(140, tries=100)
-        member: discord.Member = (
+        member: discord.Member | None = (
             interaction.guild.get_member(self.current_user.id)
             if self.current_user
             else None

@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from core.utils import getcommand
+from ..core.utils import getcommand
 
 
 class BaseCog(commands.Cog):

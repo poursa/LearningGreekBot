@@ -1,10 +1,10 @@
 from discord.ext import commands
 from discord import Permissions, app_commands
 import discord
-from cogs.base import BaseCog
-from core.check_utils import is_owner_user
-from core.utils import getcommand
-from core import decorators
+from .base import BaseCog
+from ..core.check_utils import is_owner_user
+from ..core.utils import getcommand
+from ..core import decorators
 
 
 class AdminDev(BaseCog):

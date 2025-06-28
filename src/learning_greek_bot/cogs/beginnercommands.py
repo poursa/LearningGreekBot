@@ -2,9 +2,9 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 import asyncio
-from config import CHANNEL_NAME
-from core import decorators
-from cogs.base import BaseCog
+from ..config import CHANNEL_NAME
+from ..core import decorators
+from .base import BaseCog
 
 
 class BeginnerCommands(BaseCog):
@@ -22,6 +22,11 @@ class BeginnerCommands(BaseCog):
         await interaction.response.defer(thinking=True)
 
         guild = interaction.guild
+        if not guild:
+            await interaction.followup.send(
+                "This command can only be used in a server."
+            )
+            return
         channel = discord.utils.get(guild.text_channels, name=CHANNEL_NAME)
 
         if not channel:

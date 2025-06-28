@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 import time
-from discord import app_commands
-from config import SYNC_DELAY_MINUTES, SYNC_TIMESTAMP_FILE
 import re
+
+from discord import app_commands
+
+from ..config import SYNC_DELAY_MINUTES, SYNC_TIMESTAMP_FILE
 
 
 def should_sync():

@@ -1,3 +1,5 @@
-uv run ruff check
-uv run ruff format
-uv run ty
+#!/bin/bash
+
+uvx ruff check
+uvx ruff format
+uvx ty check
