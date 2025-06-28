@@ -1,5 +1,4 @@
-from discord import Interaction, app_commands
-
+from discord import Interaction
 from config import OWNER_ID
 
 async def is_owner_user(interaction: Interaction) -> bool:

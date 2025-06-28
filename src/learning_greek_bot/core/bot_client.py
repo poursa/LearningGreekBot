@@ -2,7 +2,7 @@ import inspect
 import importlib
 import discord
 from discord.ext import commands
-from config import GUILD_ID, EXTENSIONS
+from config import EXTENSIONS
 from core.utils import should_sync, update_sync_timestamp
 from cogs.base import BaseCog
 
