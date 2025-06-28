@@ -17,4 +17,3 @@ EXTENSIONS = [
     "cogs.admindev",
     "cogs.markov",
 ]
-

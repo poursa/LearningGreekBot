@@ -8,7 +8,7 @@ class BaseCog(commands.Cog):
         self.bot = bot
         self._checks = checks or []
         self.add_checks()
-    
+
     def add_checks(self) -> list[app_commands.Command]:
         commands = []
         for attr in dir(self):

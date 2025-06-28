@@ -6,11 +6,15 @@ from config import CHANNEL_NAME
 from core import decorators
 from cogs.base import BaseCog
 
+
 class BeginnerCommands(BaseCog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot, checks=[])
 
-    @app_commands.command(name="welcomemembers", description="Gather users who got a rank and print a welcome message")
+    @app_commands.command(
+        name="welcomemembers",
+        description="Gather users who got a rank and print a welcome message",
+    )
     @decorators.log_action()
     async def welcomemembers(self, interaction: discord.Interaction):
         EXCLUDED_ROLES = {"Native", "Non-Learner"}
@@ -34,14 +38,19 @@ class BeginnerCommands(BaseCog):
                     except discord.NotFound:
                         continue
 
-                    has_excluded = any(role.name in EXCLUDED_ROLES for role in member.roles)
+                    has_excluded = any(
+                        role.name in EXCLUDED_ROLES for role in member.roles
+                    )
                     if not has_excluded:
                         found_users.add(member.mention)
 
             await asyncio.sleep(0.2)
 
         if found_users:
-            welcome_line = " ".join(sorted(found_users)) + "# Welcome everyone! What made you interested in modern Greek?"
+            welcome_line = (
+                " ".join(sorted(found_users))
+                + "# Welcome everyone! What made you interested in modern Greek?"
+            )
             print(welcome_line)
             await interaction.followup.send("Output printed to terminal.")
         else:
