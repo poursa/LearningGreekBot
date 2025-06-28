@@ -37,7 +37,7 @@ class Markov(BaseCog):
     def __init__(self, bot):
         super().__init__(bot, checks=[])
         self.model = None
-        self.source_file = Path("data/markov_data_alb.txt")
+        self.source_file = Path("data/markov_input.txt")
         self.generating = False
         self.state_size = 2
         self.current_user = None
