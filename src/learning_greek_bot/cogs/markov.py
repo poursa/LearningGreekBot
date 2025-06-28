@@ -71,6 +71,9 @@ class Markov(BaseCog):
             if channel is None:
                 print("[ERROR] No channel found for data collection.")
                 return
+            if isinstance(channel, (discord.ForumChannel, discord.CategoryChannel)):
+                print("[ERROR] Invoked in a Forum or Category channel.")
+                return
             cutoff = datetime.now(UTC) - timedelta(days=days_lookback)
             collected = []
 
