@@ -7,7 +7,6 @@ from tqdm.asyncio import  tqdm
 import markovify
 import discord
 from discord import app_commands
-from discord.message import Message
 
 from cogs.base import BaseCog
 from core import decorators
@@ -27,12 +26,18 @@ def decode_message(encoded_msg: str) -> str:
 
 
 class Markov(BaseCog):
+    model: markovify.NewlineText | None
+    source_file: Path
+    generating: bool
+    state_size: int
+    current_user: discord.User | None
     def __init__(self, bot):
         super().__init__(bot, checks=[])
         self.model = None
         self.source_file = Path("data/markov_input.txt")
         self.generating = False
         self.state_size = 2
+        self.current_user = None
 
     def train(self, text: list[str]):
         """
@@ -58,14 +63,15 @@ class Markov(BaseCog):
             cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
             collected = []
 
-            current_datetime = datetime.now(timezone.utc)
             messages= []
             with tqdm(desc="Collecting messages", unit="hours of messages", total=days_lookback * 24) as pbar:
+                last_hour = -1
                 async for msg in channel.history(limit=None, after=cutoff):
                     messages.append(msg)
-                    hours_processed = days_lookback * 24 - (current_datetime - msg.created_at).total_seconds() // 3600
-                    pbar.n = hours_processed
-                    pbar.refresh()
+                    hours_done = int((msg.created_at - cutoff).total_seconds() // 3600)
+                    if hours_done != last_hour:
+                        pbar.update(hours_done - last_hour)
+                        last_hour = hours_done
 
             await channel.send(f"Total messages: {len(messages)}")
             for msg in messages:
@@ -80,7 +86,7 @@ class Markov(BaseCog):
                 return
 
             self.source_file.parent.mkdir(parents=True, exist_ok=True)
-            self.source_file.write_text("\n".join(collected))
+            self.source_file.write_text("\n".join(collected), encoding="utf-8")
             
             print(f"Collected {len(collected)} messages. Model is ready for training.")
             await channel.send(f"Collected {len(collected)} messages. Model is ready for training.")
@@ -95,11 +101,10 @@ class Markov(BaseCog):
         if not self.source_file.exists():
             await interaction.followup.send("No source file found. Please run /gather_markov_data first.")
             return
-        
         with self.source_file.open(encoding="utf-8") as f:
             messages = []
             for line in f.readlines():
-                match = re.match(r'^(?P<user_id>\d+):\s*"(?P<content>.*)"$', line)
+                match = re.match(r'^(?P<user_id>\d+):\s*(?P<content>.*)$', line)
                 if not match:
                     continue
                 msg_user = match.group("user_id")
@@ -112,9 +117,11 @@ class Markov(BaseCog):
         if not messages:
             await interaction.followup.send("No valid messages found to train the model.")
             return
+        if user:
+            self.current_user = user
         self.model = markovify.NewlineText('\n'.join(messages), state_size=self.state_size)
 
-        await interaction.followup.send("Markov model trained successfully." if self.model else "No model found.")
+        await interaction.followup.send(f"Markov model trained successfully on {len(messages)} messages." if self.model else "No model found.")
 
 
     @app_commands.command(name="generate_message", description="Generate a sentence using the trained Markov model.")
@@ -125,5 +132,7 @@ class Markov(BaseCog):
             await interaction.followup.send(f"No model found. Run /{self.train_markov_model.name} first.")
             return
         sentence = self.model.make_short_sentence(140, tries=100)
-        sentence = decode_message(sentence) if sentence else None
+        member: discord.Member = interaction.guild.get_member(self.current_user.id) if self.current_user else None
+        user_prefix = f"{member.display_name}: " if member else ""
+        sentence = f"{user_prefix}{sentence}" if sentence else None
         await interaction.followup.send(sentence or "Failed to generate a sentence.")

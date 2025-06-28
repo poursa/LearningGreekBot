@@ -6,17 +6,15 @@ import re
 
 def should_sync():
     try:
-        with open(SYNC_TIMESTAMP_FILE, 'r') as f:
-            last = float(f.read())
-        last_dt = datetime.fromtimestamp(last)
+        last_str = SYNC_TIMESTAMP_FILE.read_text(encoding='utf-8').strip()
+        last_dt = datetime.fromtimestamp(float(last_str))
         return datetime.now() - last_dt > timedelta(minutes=SYNC_DELAY_MINUTES)
     except FileNotFoundError:
         return True
 
 
 def update_sync_timestamp():
-    with open(SYNC_TIMESTAMP_FILE, 'w') as f:
-        f.write(str(time.time()))
+    SYNC_TIMESTAMP_FILE.write_text(str(time.time()), encoding='utf-8')
 
 def getcommand(self, attr: str) -> app_commands.Command | None:
     maybe_cmd = getattr(self, attr, None)
