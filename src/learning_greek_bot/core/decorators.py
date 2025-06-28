@@ -8,8 +8,11 @@ def log_action():
         @wraps(func)
         async def wrapper(self, interaction: Interaction, *args, **kwargs):
             time = interaction.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            guild_name = interaction.guild.name if interaction.guild else 'DMs'
+            guild_id = interaction.guild.id if interaction.guild else 'DMs'
             print(
-                f"[{time}] {interaction.user.name} ({interaction.user.id}) called command '{interaction.command.name}' in guild '{interaction.guild.name if interaction.guild else 'DMs'}' (ID: {interaction.guild.id if interaction.guild else 'DM'})"
+                f"[{time}] {interaction.user.name} ({interaction.user.id}) called command " +
+                f"{interaction.command.name} in guild {guild_name} (ID: {guild_id})"
             )
             return await func(self, interaction, *args, **kwargs)
 
