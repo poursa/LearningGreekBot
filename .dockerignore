@@ -5,6 +5,5 @@
 .env
 data/last_sync.txt
 .vscode
-.env
 bot-env
 *__pycache__/
