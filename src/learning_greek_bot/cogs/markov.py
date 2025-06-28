@@ -37,7 +37,7 @@ class Markov(BaseCog):
     def __init__(self, bot):
         super().__init__(bot, checks=[])
         self.model = None
-        self.source_file = Path("data/markov_input.txt")
+        self.source_file = Path("data/markov_data_alb.txt")
         self.generating = False
         self.state_size = 2
         self.current_user = None
@@ -168,13 +168,12 @@ class Markov(BaseCog):
             await interaction.followup.send("This command can only be used in a server.")
             return
         sentence = self.model.make_short_sentence(200, tries=100)
-        if self.current_user is None:
-            user_prefix = ""
-        elif (member := interaction.guild.get_member(self.current_user.id)) is not None:
-            user_prefix = f"{member.display_name}: "
-        elif (non_member := interaction.client.get_user(self.current_user.id)) is not None:
-            user_prefix = f"{non_member.display_name}: "
+        if sentence is None:
+            await interaction.followup.send("Failed to generate a sentence.")
         else:
-            user_prefix = ""
-        sentence = f"{user_prefix}{sentence}" if sentence else None
-        await interaction.followup.send(sentence or "Failed to generate a sentence.")
+            sentence = decode_message(sentence)
+            if self.current_user is None:
+                user_prefix = ""
+            else:
+                user_prefix = f"{self.current_user.display_name}: "
+            await interaction.followup.send(f"{user_prefix}{sentence}")
